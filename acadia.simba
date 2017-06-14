@@ -7,6 +7,7 @@ const
 
 const
   INVENTION_BOX := intToBox(615, 568, 638, 591);
+  BOGUS_POINT := Point(0, 0);
 
 //Invention topleft 615, 568
 //Invention bottomright 638, 591
@@ -65,30 +66,57 @@ begin
   result := tabBackpack.isFull();
 end;
 
-function findTree(): TPoint;
+function findTreeInBox(box: TBox): TPoint;
 var
   p: TPointArray;
 begin
-  if(findDTMs(ACADIA_TREE_DTM, p, mainScreen.getBounds())) then
+  if(findDTMs(ACADIA_TREE_DTM, p, box)) then
   begin
-    writeLn('Found tree');
+    writeLn('Found tree in box: ', box);
     result := MedianTPA(p);
   end
   else
-    writeLn('Couldn''t find a tree');
+    writeLn('Couldn''t find a tree in box: ', box);
+end;
+
+function findTree(): TPoint;
+begin
+  result := findTreeInBox(mainScreen.getBounds());
 end;
 
 function hoverTree(treePoint: TPoint): Boolean;
 begin
-  writeln(treePoint);
+  if(treePoint.equals(BOGUS_POINT)) then
+  begin
+    result := false;
+    exit;
+  end;
+
+  writeln('Hovering over tree at: ', treePoint);
   mouse(treePoint, MOUSE_MOVE);
   result := isMouseOverText(['Acadia tree'], 1200);
 end;
 
 procedure chopTree(treePoint: TPoint);
+var
+  treeBox: TBox;
 begin
   writeln('chopping dat shit at ', treePoint);
+
+  treeBox.setBounds(treePoint.X - 25, treePoint.Y - 25, treePoint.X + 25, treePoint.Y + 25);
+  writeln('created treebox at ', treeBox);
+
   fastClick(MOUSE_LEFT);
+
+  while(true) do
+  begin
+    treePoint := findTreeInBox(treeBox);
+    if(treeBox.isPointInside(treePoint)) then
+    begin
+      wait(random(12000));
+    end
+    else break;
+  end;
 end;
 
 var

@@ -76,7 +76,10 @@ begin
     result := MedianTPA(p);
   end
   else
+  begin
     writeLn('Couldn''t find a tree in box: ', box);
+    result := BOGUS_POINT;
+  end;
 end;
 
 function findTree(): TPoint;
@@ -108,11 +111,12 @@ begin
 
   fastClick(MOUSE_LEFT);
 
-  while(true) do
+  while(isLoggedIn() and not shouldDisassembleLogs()) do
   begin
     treePoint := findTreeInBox(treeBox);
     if(treeBox.isPointInside(treePoint)) then
     begin
+      mouseOffClient(OFF_CLIENT_RANDOM);
       wait(random(12000));
     end
     else break;

@@ -1,0 +1,129 @@
+program new;
+{$I SRL-6/SRL.simba}
+
+const
+  ACADIA_LOGS_DTM := DTMFromString('mrAAAAHic42BgYGAFYkkglgBiOSDmAmI2BghggWJOKF8AiMWBWASI+aFqXcy1gCQTQ4CdEUOCtx1DcaQng5OpFoOblS5YnBBgJIBhAAAahgWP');
+  ACADIA_TREE_DTM := DTMFromString('mggAAAHicY2NgYJBiZGCQA2IVIJYFYjEo1gbKqQGxDhDrA7EeEGsBcdkUE4aCSeYMFfOsGFJaTBiKptswlPUbM/AD5bBhRhwYAgCumgl2');
+
+const
+  INVENTION_BOX := intToBox(615, 568, 638, 591);
+
+//Invention topleft 615, 568
+//Invention bottomright 638, 591
+
+function beginDisassembleLogs(): Boolean;
+var
+  slots: TIntegerArray;
+  p: TPoint;
+begin
+  tabBackpack.open();
+
+  slots := findItem(ACADIA_LOGS_DTM, tabBackpack.getSlotBoxes(), false);
+  writeLn(Low(slots));
+  writeLn(High(slots));
+
+  if High(slots) = -1 then
+  begin
+    result := false;
+    exit();
+  end;
+
+  tabBackpack.mouseSlot(slots[0] + 1, MOUSE_MOVE);
+  gaussBox(p, INVENTION_BOX);
+
+  dragMouse(p);
+  result := True;
+end;
+
+procedure disassembleLogs();
+var
+  tries: Integer;
+  started: Boolean;
+begin
+  for tries := 0 to 2 do
+  begin
+    if(beginDisassembleLogs()) and (progressScreen.isOpen(1200)) then
+      break;
+  end;
+
+  wait(Random(1200));
+
+  while(progressScreen.isOpen(600)) do
+  begin
+    if not(started) then
+    begin
+      started := True;
+      mouseOffClient(OFF_CLIENT_RANDOM);
+    end;
+    wait(Random(12000));
+  end;
+end;
+
+function shouldDisassembleLogs(): Boolean;
+begin
+  tabBackpack.open();
+  result := tabBackpack.isFull();
+end;
+
+function findTree(): TPoint;
+var
+  p: TPointArray;
+begin
+  if(findDTMs(ACADIA_TREE_DTM, p, mainScreen.getBounds())) then
+  begin
+    writeLn('Found tree');
+    result := MedianTPA(p);
+  end
+  else
+    writeLn('Couldn''t find a tree');
+end;
+
+function hoverTree(treePoint: TPoint): Boolean;
+begin
+  writeln(treePoint);
+  mouse(treePoint, MOUSE_MOVE);
+  result := isMouseOverText(['Acadia tree'], 1200);
+end;
+
+procedure chopTree(treePoint: TPoint);
+begin
+  writeln('chopping dat shit at ', treePoint);
+  fastClick(MOUSE_LEFT);
+end;
+
+var
+  failures: Integer;
+  treePoint: TPoint;
+begin
+  clearDebug();
+  setupSRL();
+
+  while(isLoggedIn()) do
+  begin
+    if(shouldDisassembleLogs()) then
+    begin
+      writeLn('Inventory full - disassembling logs');
+      disassembleLogs();
+    end;
+
+    for failures := 0 to 5 do
+    begin
+      treePoint := findTree();
+      if(hoverTree(treePoint)) then
+      begin
+        chopTree(treePoint);
+        break;
+      end
+      else
+      begin
+        writeln('Failed to hover over a tree -- waiting');
+        wait(Random(3600))
+      end;
+    end;
+
+    wait(random(3600));
+  end;
+
+  writeln('Script ended');
+  writeln('We are logged in: ', isLoggedIn());
+end.

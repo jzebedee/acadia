@@ -1,4 +1,4 @@
-program new;
+program acadia;
 {$I SRL-6/SRL.simba}
 
 const
@@ -20,8 +20,6 @@ begin
   tabBackpack.open();
 
   slots := findItem(ACADIA_LOGS_DTM, tabBackpack.getSlotBoxes(), false);
-  writeLn(Low(slots));
-  writeLn(High(slots));
 
   if High(slots) = -1 then
   begin
@@ -47,14 +45,12 @@ begin
       break;
   end;
 
-  wait(Random(1200));
-
   while(progressScreen.isOpen(600)) do
   begin
     if not(started) then
     begin
       started := True;
-      mouseOffClient(OFF_CLIENT_RANDOM);
+      mouseOffClient(OFF_CLIENT_RANDOM, Random(1800));
     end;
     wait(Random(12000));
   end;
@@ -103,21 +99,28 @@ end;
 procedure chopTree(treePoint: TPoint);
 var
   treeBox: TBox;
+  center: TPoint;
 begin
-  writeln('chopping dat shit at ', treePoint);
+  writeln('Chopping tree at point: ', treePoint);
 
-  treeBox.setBounds(treePoint.X - 25, treePoint.Y - 25, treePoint.X + 25, treePoint.Y + 25);
-  writeln('created treebox at ', treeBox);
+  if Random(100) < RandomRange(13,25) then
+  begin
+    missMouse(treePoint, true);
+  end;
+  writeln('Created treebox at: ', treeBox);
 
-  fastClick(MOUSE_LEFT);
+  mouse(treePoint, MOUSE_LEFT, MOUSE_HUMAN);
 
   while(isLoggedIn() and not shouldDisassembleLogs()) do
   begin
+    center := mainScreen.getCenterPoint();
+    treeBox.setBounds(center.X-20,center.Y-20,center.X+20,center.Y+20);
+
     treePoint := findTreeInBox(treeBox);
     if(treeBox.isPointInside(treePoint)) then
     begin
-      mouseOffClient(OFF_CLIENT_RANDOM);
-      wait(random(12000));
+      mouseOffClient(OFF_CLIENT_RANDOM, random(1800));
+      wait(random(3400));
     end
     else break;
   end;

@@ -78,16 +78,22 @@ begin
       break;
   end;
 
-  if(tries := 3) then
+  if(tries = 3) then
   begin
+    writeln('Max tries opening bank');
+    bankScreen.close(false);
+
     if(LOG_ACTION = 3) then disassembleLogs();
     exit;
   end;
 
-  while(bankScreen.isOpen(600) and not bankScreen.isPackEmpty()) do
+  for tries := 0 to 3 do
   begin
-    writeLn('Depositing inventory');
-    bankScreen.quickDeposit(QUICK_DEPOSIT_INVENTORY);
+    if(bankScreen.isOpen(600) and not bankScreen.isPackEmpty()) then
+    begin
+      writeLn('Depositing inventory');
+      bankScreen.quickDeposit(QUICK_DEPOSIT_INVENTORY);
+    end;
   end;
 
   bankScreen.close(false);

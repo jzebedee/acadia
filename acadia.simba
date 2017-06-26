@@ -9,6 +9,11 @@ const
   INVENTION_BOX := intToBox(615, 568, 638, 591);
   BOGUS_POINT := Point(0, 0);
 
+const
+  LOG_ACTION := 3; //1 - Disassemble
+                   //2 - Bank
+                   //3 - Bank, Disassemble on failure
+
 //Invention topleft 615, 568
 //Invention bottomright 638, 591
 
@@ -56,10 +61,36 @@ begin
   end;
 end;
 
-function shouldDisassembleLogs(): Boolean;
+function clickBank(): Boolean;
+var
+  x, y: Integer;
 begin
-  tabBackpack.open();
-  result := tabBackpack.isFull();
+  result := mainScreen.findObject(x, y, [4498175,4826623,8236281], [7,7,9], colorSetting(0), mainScreen.getCenterPoint(), 20, 10, 1, ['Bank', 'chest'], mainScreen.getBounds(), MOUSE_LEFT);
+end;
+
+procedure bankLogs();
+var
+  tries: Integer;
+begin
+  for tries := 0 to 3 do
+  begin
+    if(clickBank() and bankScreen.isOpen(6000)) then
+      break;
+  end;
+
+  if(tries := 3) then
+  begin
+    if(LOG_ACTION = 3) then disassembleLogs();
+    exit;
+  end;
+
+  while(bankScreen.isOpen(600) and not bankScreen.isPackEmpty()) do
+  begin
+    writeLn('Depositing inventory');
+    bankScreen.quickDeposit(QUICK_DEPOSIT_INVENTORY);
+  end;
+
+  bankScreen.close(false);
 end;
 
 function findTreeInBox(box: TBox): TPoint;
@@ -111,7 +142,7 @@ begin
 
   mouse(treePoint, MOUSE_LEFT, MOUSE_HUMAN);
 
-  while(isLoggedIn() and not shouldDisassembleLogs()) do
+  while(isLoggedIn() and not tabBackpack.isFull()) do
   begin
     center := mainScreen.getCenterPoint();
     treeBox.setBounds(center.X-20,center.Y-20,center.X+20,center.Y+20);
@@ -135,10 +166,19 @@ begin
 
   while(isLoggedIn()) do
   begin
-    if(shouldDisassembleLogs()) then
+    if(tabBackpack.isFull()) then
     begin
-      writeLn('Inventory full - disassembling logs');
-      disassembleLogs();
+      write('Inventory full');
+      if(LOG_ACTION = 1) then
+      begin
+        writeLn(' - disassembling');
+        disassembleLogs();
+      end
+      else if(LOG_ACTION = 2 or LOG_ACTION = 3) then
+      begin
+        writeLn(' - banking');
+        bankLogs();
+      end;
     end;
 
     for failures := 0 to 5 do

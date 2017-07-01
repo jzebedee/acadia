@@ -139,11 +139,6 @@ var
   center: TPoint;
 begin
   writeln('Chopping tree at point: ', treePoint);
-
-  if Random(100) < RandomRange(13,25) then
-  begin
-    missMouse(treePoint, true);
-  end;
   writeln('Created treebox at: ', treeBox);
 
   mouse(treePoint, MOUSE_LEFT, MOUSE_HUMAN);
